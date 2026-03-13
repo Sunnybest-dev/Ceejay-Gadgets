@@ -28,6 +28,7 @@ exports.createRound = async (req, res, next) => {
 };
 
 
+
 // Get all rounds
 exports.getRounds = async (req, res, next) => {
   try {
@@ -40,6 +41,7 @@ exports.getRounds = async (req, res, next) => {
     next(err);
   }
 };
+
 
 
 // Buy lucky draw ticket
@@ -72,9 +74,13 @@ exports.buyTicket = async (req, res, next) => {
       });
     }
 
+    // Generate ticket number
+    const ticketNumber = entriesCount + 1;
+
     const entry = await LuckyDrawEntry.create({
       userId: req.user.id,
-      luckyDrawRoundId: round.id
+      luckyDrawRoundId: round.id,
+      ticketNumber
     });
 
     res.status(201).json({
@@ -88,7 +94,8 @@ exports.buyTicket = async (req, res, next) => {
 };
 
 
-// Draw winner
+
+// Draw winner (Admin)
 exports.drawWinner = async (req, res, next) => {
   try {
 
@@ -117,6 +124,46 @@ exports.drawWinner = async (req, res, next) => {
     res.json({
       message: "Winner selected",
       winner
+    });
+
+  } catch (err) {
+    next(err);
+  }
+};
+
+
+
+// Get user winning probability
+exports.getProbability = async (req, res, next) => {
+  try {
+
+    const { roundId } = req.params;
+
+    const totalTickets = await LuckyDrawEntry.count({
+      where: { luckyDrawRoundId: roundId }
+    });
+
+    const userTickets = await LuckyDrawEntry.count({
+      where: {
+        luckyDrawRoundId: roundId,
+        userId: req.user.id
+      }
+    });
+
+    if (totalTickets === 0) {
+      return res.json({
+        userTickets: 0,
+        totalTickets: 0,
+        probability: "0%"
+      });
+    }
+
+    const probability = (userTickets / totalTickets) * 100;
+
+    res.json({
+      userTickets,
+      totalTickets,
+      probability: probability.toFixed(2) + "%"
     });
 
   } catch (err) {

@@ -2,7 +2,11 @@ const { DataTypes } = require("sequelize");
 const { sequelize } = require("../config/db");
 
 const LuckyDrawEntry = sequelize.define("LuckyDrawEntry", {
-  paymentReference: DataTypes.STRING
+  ticketNumber: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    unique: true
+  }
 });
 
 module.exports = LuckyDrawEntry;
